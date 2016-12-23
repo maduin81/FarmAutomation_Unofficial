@@ -84,6 +84,9 @@
     <Reference Include="Microsoft.Xna.Framework.Graphics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=842cf8be1de50553">
       <Private>False</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>D:\GOG Games\Stardew Valley\Mods\FarmAutomation.ItemCollector\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Stardew Valley">
       <HintPath>D:\GOG Games\Stardew Valley\Stardew Valley.exe</HintPath>
       <Private>False</Private>
@@ -103,6 +106,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\AcceptableCategory.cs" />
+    <Compile Include="Models\AcceptableObject.cs" />
+    <Compile Include="Models\CloneableObject.cs" />
+    <Compile Include="Models\MachineBuilding.cs" />
+    <Compile Include="Models\MachineBuildingConfig.cs" />
+    <Compile Include="Models\MachineConfig.cs" />
     <Compile Include="Processors\MaterialHelper.cs" />
     <Compile Include="Processors\AnimalHouseProcessor.cs" />
     <Compile Include="ItemCollectorConfiguration.cs" />
