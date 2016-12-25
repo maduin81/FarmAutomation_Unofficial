@@ -8,14 +8,6 @@
   /* Default: true. If true sound will be muted for a short time while all animals get processed. If false, there will be quite a cacaphony of bleats, moos and clucks. */
   "MuteAnimalsWhenCollecting": true,
 
-  /* The machines from which their finished product should automatically be collected. If it's a machine you can put items in, it will also look for items to put in afterwards */
-  "MachinesToCollectFrom": "Keg, Preserves Jar, Cheese Press, Mayonnaise Machine, Loom, Oil Maker, Recycling Machine, Crystalarium, Worm Bin, Bee House, Strange Capsule, Tapper, Statue Of Endless Fortune, Furnace, Seed Maker, Statue Of Perfection, Crab Pot, Charcoal Kiln, Mushroom Box, Lightning Rod, Slime Egg-Press",
-
-  /* These machines or items are considered a connection. If a machine is not connected to a chest (either by being directly adjecant or by being adjecant to another machine which is machine connected) nothing will happen.
-  For example, you could add Fence and Gate if you want those to be considered for connections as well.
-  */
-  "ItemsToConsiderConnectors": "Keg, Preserves Jar, Cheese Press, Mayonnaise Machine, Loom, Oil Maker, Recycling Machine, Crystalarium, Worm Bin, Bee House, Strange Capsule, Tapper, Statue Of Endless Fortune, Furnace, Seed Maker, Statue Of Perfection, Crab Pot, Charcoal Kiln, Mushroom Box, Lightning Rod, Slime Egg-Press, Chest",
-
   /* Default: false. If set to true, when looking for connections not only directly adjecent items will be considered, but diagonally adjecent items as well. */
   "AllowDiagonalConnectionsForAllItems": false,
 
@@ -40,67 +32,271 @@
       Stepping Stone Path = 9;
     */
   "FlooringsToConsiderConnectors": [ 6 ],
-
   /* The names of the game locations where machines are searched for.
-  The full list of possible locations is as follows:
-    FarmHouse
-    Farm
-    FarmCave
-    Town
-    JoshHouse
-    HaleyHouse
-    SamHouse
-    Blacksmith
-    ManorHouse
-    SeedShop
-    Saloon
-    Trailer
-    Hospital
-    HarveyRoom
-    Beach
-    ElliottHouse
-    Mountain
-    ScienceHouse
-    SebastianRoom
-    Tent
-    Forest
-    WizardHouse
-    AnimalShop
-    LeahHouse
-    BusStop
-    Mine
-    Sewer
-    Desert
-    Club
-    SandyHouse
-    ArchaeologyHouse
-    WizardHouseBasement
-    AdventureGuild
-    Woods
-    Railroad
-    Summit
-    FishShop
-    BathHouse_Entry
-    BathHouse_MensLocker
-    BathHouse_WomensLocker
-    BathHouse_Pool
-    CommunityCenter
-    JojaMart
-    Greenhouse
-    SkullCave
-    Backwoods
-    Tunnel
-  */
-  "LocationsToSearch": "Farm, Greenhouse, FarmHouse, FarmCave, Beach",
+	  The full list of possible locations is as follows:
+		FarmHouse
+		Farm
+		FarmCave
+		Town
+		JoshHouse
+		HaleyHouse
+		SamHouse
+		Blacksmith
+		ManorHouse
+		SeedShop
+		Saloon
+		Trailer
+		Hospital
+		HarveyRoom
+		Beach
+		ElliottHouse
+		Mountain
+		ScienceHouse
+		SebastianRoom
+		Tent
+		Forest
+		WizardHouse
+		AnimalShop
+		LeahHouse
+		BusStop
+		Mine
+		Sewer
+		Desert
+		Club
+		SandyHouse
+		ArchaeologyHouse
+		WizardHouseBasement
+		AdventureGuild
+		Woods
+		Railroad
+		Summit
+		FishShop
+		BathHouse_Entry
+		BathHouse_MensLocker
+		BathHouse_WomensLocker
+		BathHouse_Pool
+		CommunityCenter
+		JojaMart
+		Greenhouse
+		SkullCave
+		Backwoods
+		Tunnel
+		Cellar
+		BugCave
+	*/
+  "LocationsToSearch": "Farm, Greenhouse, FarmHouse, FarmCave, Beach, Cellar",
 
   /* Default: true. If true, all buildings (Barns, Coops etc) will be checked for machines as well. If false, the inside of those buildings will be ignored. */
   "AddBuildingsToLocations": true,
 
   /* Default: 0. Allowed values: 0 - 5000. If set to a number higher than 0, each time machines are processed the sound is muted for this amount of milliseconds. For 2 seconds you would therefore write 2000. Please note that this will mute your sound every 14 seconds (when the in game time updates) and you might not hear other sound clues, as such I only recommend this if you're running a lot of loud machines and only as long as you have materials to power them (especially furnaces are very loud if several get activated at once). As an alternative, consider just setting your sound in the game options a bit lower.
   
-   As the time needed to process all machines heavily depends on your computer, if you do use this option, I recommend trying 1000 milliseconds and gradually increasing it by 250 milliseconds until you find a suitable duration. */
+	As the time needed to process all machines heavily depends on your computer, if you do use this option, I recommend trying 1000 milliseconds and gradually increasing it by 250 milliseconds until you find a suitable duration. */
   "MuteWhileCollectingFromMachines": 0,
 
-  /* Default: true. If true, the mod is enabled. If false, the mod will not do anything. */
+  /*Machine Configurations
+	   Name = Name of machine
+	   CoalRequired = How many, if any, pieces of coal are required for operation, default is 0 for none
+	   CollectFrom = Mod will attempt to collect from this machine, default = true
+	   InsertItems = Mod will attempt to draw items to process from connected chest to this machine, default = false
+	   AllowConnection = Will count as a connection between a machine and a chest, default = true
+	   AcceptableObjects =
+			Index = Index of item that is drawn from chest
+			AmountRequired = How many of this item is drawn
+	   AcceptableCategories =
+			Index = Category index of items that are drawn from chest
+			AmountRequired = How many of these items are drawn
+      MaxQuality = Maxium quality of items that will be drawn, 0 = normal, 1 = silver, 2 = gold, 4 = iridium (Where in the world is 3?)
+	   */
+  "MachineConfigs": [
+    {
+      "Name": "Furnace",
+      "CoalRequired": 1,
+      "InsertItems": true,
+      "AcceptableObjects": [
+        {
+          "Name": "Iron Ore",
+          "AmountRequired": 5
+        },
+        {
+          "Name": "Gold Ore",
+          "AmountRequired": 5
+        },
+        {
+          "Name": "Copper Ore",
+          "AmountRequired": 5
+        },
+        {
+          "Name": "Iridium Ore",
+          "AmountRequired": 5
+        },
+        { "Name": "Quartz" }
+      ]
+    },
+    {
+      "Name": "Preserves Jar",
+      "InsertItems": true,
+      "AcceptableCategories": [
+        { "Index": -79 },
+        { "Index": -75 }
+      ]
+    },
+    {
+      "Name": "Keg",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        {
+          "Name": "Coffee Bean",
+          "AmountRequired": 5
+        },
+        { "Index": 340 },
+        { "Name": "Wheat" },
+        { "Name": "Hops" }
+      ],
+      "AcceptableCategories": [
+        { "Index": -79 },
+        { "Index": -75 }
+      ]
+    },
+    {
+      "Name": "Loom",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        { "Name": "Wool" }
+      ]
+    },
+    {
+      "Name": "Cheese Press",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        { "Name": "Milk" },
+        { "Name": "Large Milk" },
+        { "Name": "Goat Milk" },
+        { "Name": "L. Goat Milk" }
+      ]
+    },
+    {
+      "Name": "Mayonnaise Machine",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        { "Name": "Dinosaur Egg" }
+      ],
+      "AcceptableCategories": [
+        { "Index": -5 }
+      ]
+    },
+    {
+      "Name": "Oil Maker",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        { "Name": "Corn" },
+        { "Name": "Red Mushroom" },
+        { "Name": "Truffle" },
+        { "Name": "Sunflower Seeds" }
+      ]
+    },
+    {
+      "Name": "Recycling Machine",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        { "Name": "Trash" },
+        { "Name": "Driftwood" },
+        { "Name": "Broken Glasses" },
+        { "Name": "Broken CD" },
+        { "Name": "Soggy Newspaper" }
+      ]
+    },
+    {
+      "Name": "Charcoal Kiln",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        {
+          "Name": "Wood",
+          "AmountRequired": 10
+        }
+      ]
+    },
+    {
+      "Name": "Slime Egg-Press",
+      "InsertItems": true,
+      "AcceptableObjects": [
+        {
+          "Name": "Slime",
+          "AmountRequired": 100
+        }
+      ]
+    },
+    {
+      "Name": "Cask",
+      "MaxQuality": 2,
+      "InsertItems": true,
+      "AcceptableObjects": [
+        { "Name": "Mead" },
+        { "Name": "Cheese" },
+        { "Name": "Goat Cheese" },
+        { "Name": "Pale Ale" },
+        { "Name": "Beer" },
+        { "Index": 348 }
+      ],
+      "AcceptableCategories": [ ]
+    },
+    {
+      "Name": "Crab Pot",
+      "InsertItems": true,
+      "AcceptableCategories": [
+        { "Index": -21 }
+      ]
+    },
+    { "Name": "Crystalarium" },
+    { "Name": "Worm Bin" },
+    { "Name": "Bee House" },
+    { "Name": "Strange Capsule" },
+    { "Name": "Tapper" },
+    { "Name": "Statue Of Endless Fortune", },
+    { "Name": "Statue Of Perfection" },
+    { "Name": "Mushroom Box" },
+    { "Name": "Lightning Rod" },
+    {
+      "Name": "Chest",
+      "CollectFrom": false
+    },
+    {
+      /* Seed Maker is a special case, if included, seeds will automatically be built from available crops, no need to add them here but the entry must still exist */
+      "Name": "Seed Maker",
+      "InsertItems": true
+    }
+  ],
+
+  /* MachineBuildingConfigs */
+  /*  Name = Name of building
+      InputXOffset = Location of input, number of tiles to the right from top-left corner of building
+      InputYOffset = Location of input, number of tiles down from the top-left of building
+      OutputXOffset = Location of output, number of tiles to the right from the top-left corner of building
+      OutputYOffset = Location of output, number of tiles down from the top-left corner of building
+      HasInput = Building accepts input, Default = false
+      HasOutput = Building has output, Default = false
+      AcceptableObjects = Items that will be accepted into machine as input
+  */
+  "MachineBuildingConfigs": [
+    {
+      "Name": "Mill",
+      "InputXOffset": 1,
+      "InputYOffset": 1,
+      "OutputXOffset": 3,
+      "OutputYOffset": 1,
+      "HasInput": true,
+      "HasOutput": true,
+      "AcceptableObjects": [
+        { "Name": "Beet" },
+        { "Name": "Wheat" }
+      ]
+    },
+    {
+      "Name": "Junimo Hut",
+      "OutputXOffset": 0,
+      "OutputYOffset": 1,
+      "HasOutput": true
+    }
+  ],
   "EnableMod": true
-}
+}               

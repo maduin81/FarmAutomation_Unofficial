@@ -5,7 +5,6 @@ using System.Linq;
 using FarmAutomation.Common;
 using FarmAutomation.ItemCollector.Models;
 using FarmAutomation.ItemCollector.Processors;
-using Microsoft.Xna.Framework.Input;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -25,6 +24,7 @@ namespace FarmAutomation.ItemCollector
         {
             Log.Info($"Initalizing {nameof(ItemCollectorMod)}");
             _config = ConfigurationBase.LoadConfiguration<ItemCollectorConfiguration>();
+            
             _config.MachineConfigs.ForEach(t =>
             {
                 if (t.AcceptableObjects == null)
@@ -37,25 +37,27 @@ namespace FarmAutomation.ItemCollector
                     t.AcceptableCategories = new List<AcceptableCategory>();
                 }
             });
-
+            
             _machineBuildingConfigs = _config.MachineBuildingConfigs;
 
             var machineConfigs = _config.MachineConfigs;
             var config = machineConfigs.FirstOrDefault(t => t.Name == "Seed Maker");
+            
             if (config != null)
             {
                 config.AcceptableObjects = GetSeedMakerMaterials();
-            }
-
-            ItemFinder.ConnectorItems = new List<string>(_config.ItemsToConsiderConnectors.Split(',').Select(v => v.Trim()));
+            }            
+            
+            ItemFinder.ConnectorItems = machineConfigs.Where(t => t.AllowConnection).ToList().Select(t => t.Name).ToList();
             ItemFinder.ConnectorFloorings = _config.FlooringsToConsiderConnectors;
             
             var locationsToSearch = _config.LocationsToSearch.Split(',').Select(v => v.Trim()).ToList();
+            
             _machinesProcessor = new MachinesProcessor(machineConfigs, locationsToSearch, _config.AddBuildingsToLocations, _config.AllowDiagonalConnectionsForAllItems)
             {
                 MuteWhileCollectingFromMachines = Math.Max(0, Math.Min(5000, _config.MuteWhileCollectingFromMachines))
             };
-
+            
             _buildingProcessor = new BuildingProcessor(_config.PetAnimals, _config.AdditionalFriendshipFromCollecting, _config.MuteAnimalsWhenCollecting);
         }
 
