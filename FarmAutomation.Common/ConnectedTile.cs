@@ -9,7 +9,9 @@ namespace FarmAutomation.Common
     public class ConnectedTile
     {
         public Object Object { get; set; }
+
         public Chest Chest { get; set; }
+
         public Vector2 Location { get; set; }
 
         public bool Equals(ConnectedTile obj)

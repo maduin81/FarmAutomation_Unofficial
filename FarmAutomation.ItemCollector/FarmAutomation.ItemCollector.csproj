@@ -113,7 +113,7 @@
     <Compile Include="Models\MachineBuildingConfig.cs" />
     <Compile Include="Models\MachineConfig.cs" />
     <Compile Include="Processors\MaterialHelper.cs" />
-    <Compile Include="Processors\AnimalHouseProcessor.cs" />
+    <Compile Include="Processors\BuildingProcessor.cs" />
     <Compile Include="ItemCollectorConfiguration.cs" />
     <Compile Include="ItemCollectorMod.cs" />
     <Compile Include="Processors\MachineHelper.cs" />

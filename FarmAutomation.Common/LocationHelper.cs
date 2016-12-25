@@ -12,15 +12,7 @@ namespace FarmAutomation.Common
 
         public static bool IsTileOnMap(GameLocation location, Vector2 position)
         {
-            if (location.Objects.ContainsKey(position))
-            {
-                return true;
-            }
-            if (location.terrainFeatures.ContainsKey(position))
-            {
-                return true;
-            }
-            return false;
+            return location.Objects.ContainsKey(position) || location.terrainFeatures.ContainsKey(position);
         }
     }
 }

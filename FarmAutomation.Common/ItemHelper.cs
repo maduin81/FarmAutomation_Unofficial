@@ -1,4 +1,5 @@
-﻿using StardewValley.Objects;
+﻿using System.Collections.Generic;
+using StardewValley.Objects;
 using Object = StardewValley.Object;
 
 namespace FarmAutomation.Common
@@ -10,17 +11,31 @@ namespace FarmAutomation.Common
             refillable.Stack -= amount;
             if (refillable.Stack <= 0)
             {
-                //used last item of stack - delete from chest
+                // used last item of stack - delete from chest
                 chest.items[chest.items.IndexOf(refillable)] = null;
                 chest.items.RemoveAll(i => i == null);
+            }
+        }
+
+        public static void TransferBetweenInventories(Chest srcChest, Chest destChest, List<Object> items)
+        {            
+            lock (srcChest)
+            {
+                foreach (var srcItem in items)
+                {
+                    var destItem = srcItem.getOne();
+                    destItem.Stack = srcItem.getStack();
+                    destChest.addItem(destItem);
+                    RemoveItemFromChest(srcItem, srcChest, srcItem.Stack);
+                }
             }
         }
 
         /// <summary>
         /// Copy of the private method Object.getMinutesForCrystalarium
         /// </summary>
-        /// <param name="whichGem"></param>
-        /// <returns></returns>
+        /// <param name="whichGem">Type of gem in the Crystalarium</param>
+        /// <returns>Returns process time for Crystalarium</returns>
         public static int GetMinutesForCrystalarium(int whichGem)
         {
             switch (whichGem)
@@ -46,20 +61,16 @@ namespace FarmAutomation.Common
                     return 2400;
                 case 72:
                     return 7200;
-                default:
-                    switch (whichGem)
-                    {
-                        case 80:
-                            return 420;
-                        case 82:
-                            return 1300;
-                        case 84:
-                            return 1120;
-                        case 86:
-                            return 800;
-                    }
-                    break;
+                case 80:
+                    return 420;
+                case 82:
+                    return 1300;
+                case 84:
+                    return 1120;
+                case 86:
+                    return 800;                
             }
+
             return 5000;
         }
     }

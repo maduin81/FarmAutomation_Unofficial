@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using FarmAutomation.Common;
+using FarmAutomation.ItemCollector.Models;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
@@ -9,22 +10,24 @@ using StardewValley.Objects;
 
 namespace FarmAutomation.ItemCollector.Processors
 {
-    class MachinesProcessor
-    {
-        private readonly List<string> _machineNamesToProcess;
+    public class MachinesProcessor
+    {        
         private readonly List<string> _gameLocationsToSearch;
+
         private readonly bool _allowDiagonalConnectionsForAllItems;
-        Dictionary<string, Dictionary<Vector2, Chest>> _connectedChestsCache = new Dictionary<string, Dictionary<Vector2, Chest>>();
+
         private readonly MaterialHelper _materialHelper;
 
-        public bool AddBuildingsToLocations { get; set; }
+        private readonly List<MachineConfig> _machineConfigs;
 
-        public int MuteWhileCollectingFromMachines { get; set; }
+        private Dictionary<string, Dictionary<Vector2, Chest>> _connectedChestsCache = new Dictionary<string, Dictionary<Vector2, Chest>>();
 
-        public MachinesProcessor(List<string> machineNamesToProcess, List<string> gameLocationsToSearch, bool addBuildingsToLocations, bool allowDiagonalConnectionsForAllItems)
+        public MachinesProcessor(List<MachineConfig> machineConfigs, List<string> gameLocationsToSearch, bool addBuildingsToLocations, bool allowDiagonalConnectionsForAllItems)
         {
             AddBuildingsToLocations = addBuildingsToLocations;
-            _machineNamesToProcess = machineNamesToProcess;
+            _machineConfigs = (from x in machineConfigs
+                               where x.CollectFrom || x.InsertItems
+                               select x).ToList();
             _gameLocationsToSearch = gameLocationsToSearch;
             _allowDiagonalConnectionsForAllItems = allowDiagonalConnectionsForAllItems;
             _gameLocationsToSearch.ForEach(gl => _connectedChestsCache.Add(gl, new Dictionary<Vector2, Chest>()));
@@ -32,9 +35,13 @@ namespace FarmAutomation.ItemCollector.Processors
             DailyReset();
         }
 
+        public bool AddBuildingsToLocations { get; set; }
+
+        public int MuteWhileCollectingFromMachines { get; set; }
+
         public IEnumerable<GameLocation> GetLocations()
         {
-            List<GameLocation> gameLocations = new List<GameLocation>();
+            var gameLocations = new List<GameLocation>();
             lock (_gameLocationsToSearch)
             {
                 foreach (var locationName in _gameLocationsToSearch)
@@ -52,6 +59,7 @@ namespace FarmAutomation.ItemCollector.Processors
                     }
                 }
             }
+
             return gameLocations;
         }
 
@@ -74,52 +82,6 @@ namespace FarmAutomation.ItemCollector.Processors
             }
         }
 
-
-        private void BuildCacheForLocation(GameLocation gameLocation)
-        {
-            if (gameLocation != null)
-            {
-                var cacheToAdd = new Dictionary<Vector2, Chest>();
-                Log.Debug($"Starting search for connected locations at {LocationHelper.GetName(gameLocation)}");
-                var items = ItemFinder.FindObjectsWithName(gameLocation, _machineNamesToProcess);
-                foreach (var valuePair in items)
-                {
-                    Vector2 location = valuePair.Key;
-                    if (cacheToAdd.ContainsKey(location))
-                    {
-                        //already found in another search
-                        continue;
-                    }
-
-                    List<ConnectedTile> processedLocations = new List<ConnectedTile>
-                    {
-                        new ConnectedTile {Location = location, Object = valuePair.Value}
-                    };
-
-                    ItemFinder.FindConnectedLocations(gameLocation, location, processedLocations, _allowDiagonalConnectionsForAllItems);
-                    var chest = processedLocations.FirstOrDefault(c => c.Chest != null)?.Chest;
-                    foreach (var connectedLocation in processedLocations)
-                    {
-                        cacheToAdd.Add(connectedLocation.Location, chest);
-                    }
-                }
-                lock (_connectedChestsCache)
-                {
-                    if (_connectedChestsCache.ContainsKey(LocationHelper.GetName(gameLocation)))
-                    {
-                        // already ran?
-                        _connectedChestsCache.Remove(LocationHelper.GetName(gameLocation));
-                    }
-                    _connectedChestsCache.Add(LocationHelper.GetName(gameLocation), new Dictionary<Vector2, Chest>());
-                    foreach (var cache in cacheToAdd)
-                    {
-                        _connectedChestsCache[LocationHelper.GetName(gameLocation)].Add(cache.Key, cache.Value);
-                    }
-                }
-                Log.Debug($"Searched your {LocationHelper.GetName(gameLocation)} for machines to collect from and found a total of {_connectedChestsCache[LocationHelper.GetName(gameLocation)].Count} locations to look for");
-            }
-        }
-
         public void ProcessMachines()
         {
             if (_connectedChestsCache == null)
@@ -127,10 +89,12 @@ namespace FarmAutomation.ItemCollector.Processors
                 _connectedChestsCache = new Dictionary<string, Dictionary<Vector2, Chest>>();
                 Parallel.ForEach(GetLocations(), BuildCacheForLocation);
             }
+
             if (MuteWhileCollectingFromMachines > 0)
             {
                 SoundHelper.MuteTemporary(MuteWhileCollectingFromMachines);
             }
+
             foreach (var gameLocation in GetLocations())
             {
                 MachineHelper.Who.currentLocation = gameLocation;
@@ -142,25 +106,16 @@ namespace FarmAutomation.ItemCollector.Processors
                         BuildCacheForLocation(gameLocation);
                     }
                 }
+
                 foreach (var valuePair in _connectedChestsCache[LocationHelper.GetName(gameLocation)])
                 {
-                    Vector2 location = valuePair.Key;
-                    Chest connectedChest = valuePair.Value;
-                    if (connectedChest == null)
+                    var location = valuePair.Key;
+                    var connectedChest = valuePair.Value;
+                    if (connectedChest != null && gameLocation.objects.ContainsKey(location) &&
+                        _machineConfigs.Any(x => x.Name == gameLocation.objects[location].Name))
                     {
-                        // no chest connected
-                        continue;
+                        MachineHelper.ProcessMachine(gameLocation.objects[location], connectedChest, _materialHelper, (from x in _machineConfigs where x.Name == gameLocation.objects[location].Name select x).FirstOrDefault());
                     }
-                    if (!gameLocation.objects.ContainsKey(location))
-                    {
-                        // skip connection without objects like floortiles etc
-                        continue;
-                    }
-                    if (!_machineNamesToProcess.Contains(gameLocation.objects[location].Name))
-                    {
-                        continue;
-                    }
-                    MachineHelper.ProcessMachine(gameLocation.objects[location], connectedChest, _materialHelper);
                 }
             }
         }
@@ -171,6 +126,7 @@ namespace FarmAutomation.ItemCollector.Processors
             {
                 MachineHelper.DailyReset();
             }
+
             _connectedChestsCache = null;
         }
 
@@ -181,5 +137,53 @@ namespace FarmAutomation.ItemCollector.Processors
                 _connectedChestsCache.Remove(LocationHelper.GetName(location));
             }
         }
+
+        private void BuildCacheForLocation(GameLocation gameLocation)
+        {
+            if (gameLocation != null)
+            {
+                var cacheToAdd = new Dictionary<Vector2, Chest>();
+                Log.Debug($"Starting search for connected locations at {LocationHelper.GetName(gameLocation)}");
+                var items = ItemFinder.FindObjectsWithName(gameLocation, (from x in _machineConfigs select x.Name).ToList());
+                foreach (var valuePair in items)
+                {
+                    var location = valuePair.Key;
+                    if (cacheToAdd.ContainsKey(location))
+                    {
+                        // already found in another search
+                        continue;
+                    }
+
+                    var processedLocations = new List<ConnectedTile>
+                    {
+                        new ConnectedTile { Location = location, Object = valuePair.Value }
+                    };
+
+                    ItemFinder.FindConnectedLocations(gameLocation, location, processedLocations, _allowDiagonalConnectionsForAllItems);
+                    var chest = processedLocations.FirstOrDefault(c => c.Chest != null)?.Chest;
+                    foreach (var connectedLocation in processedLocations)
+                    {
+                        cacheToAdd.Add(connectedLocation.Location, chest);
+                    }
+                }
+
+                lock (_connectedChestsCache)
+                {
+                    if (_connectedChestsCache.ContainsKey(LocationHelper.GetName(gameLocation)))
+                    {
+                        // already ran?
+                        _connectedChestsCache.Remove(LocationHelper.GetName(gameLocation));
+                    }
+
+                    _connectedChestsCache.Add(LocationHelper.GetName(gameLocation), new Dictionary<Vector2, Chest>());
+                    foreach (var cache in cacheToAdd)
+                    {
+                        _connectedChestsCache[LocationHelper.GetName(gameLocation)].Add(cache.Key, cache.Value);
+                    }
+                }
+
+                Log.Debug($"Searched your {LocationHelper.GetName(gameLocation)} for machines to collect from and found a total of {_connectedChestsCache[LocationHelper.GetName(gameLocation)].Count} locations to look for");
+            }
+        }        
     }
 }

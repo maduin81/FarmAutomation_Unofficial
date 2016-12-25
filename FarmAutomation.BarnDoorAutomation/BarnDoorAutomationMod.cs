@@ -12,39 +12,45 @@ namespace FarmAutomation.BarnDoorAutomation
     /// </summary>
     public class BarnDoorAutomationMod : Mod
     {
-        private bool _gameLoaded;
-
         private readonly BarnDoorAutomationConfiguration _config;
 
-        /// <summary>
-        /// if true, opening doors will be skipped until the next day. this is used to keep cpu time as low as possible
-        /// </summary>
-        bool IgnoreOpeningToday { get; set; }
+        private bool _gameLoaded;
 
-        /// <summary>
-        /// if true, closing doors will be skipped until the next day. this is used to keep cpu time as low as possible
-        /// </summary>
-        bool IgnoreClosingToday { get; set; }
-
-        /// <summary>
-        /// default constructor
-        /// </summary>
         public BarnDoorAutomationMod()
         {
             Log.Info($"Initalizing {nameof(BarnDoorAutomationMod)}");
             _config = ConfigurationBase.LoadConfiguration<BarnDoorAutomationConfiguration>();
         }
 
+        public bool IgnoreOpeningToday { get; set; }
+        
+        public bool IgnoreClosingToday { get; set; }
+
         /// <summary>
         /// entry point for mods. events are subscribed here
         /// </summary>
-        /// <param name="objects"></param>
+        /// <param name="objects">List of objects</param>
         public override void Entry(params object[] objects)
         {
             base.Entry(objects);
             GameEvents.GameLoaded += (s, e) => { _gameLoaded = true; };
             TimeEvents.DayOfMonthChanged += (s, e) => { ResetDoorStatesOnNewDay(); };
-            TimeEvents.TimeOfDayChanged += (s, e) => { if (_gameLoaded && _config.EnableMod) ProcessIfTimeAndWeatherFits(); };
+            TimeEvents.TimeOfDayChanged += (s, e) => 
+            {
+                if (_gameLoaded && _config.EnableMod)
+                {
+                    ProcessIfTimeAndWeatherFits();
+                }
+            };
+        }
+
+        /// <summary>
+        /// check if the animals will stay inside
+        /// </summary>
+        /// <returns>true if the animals won't leave their buildings today</returns>
+        private static bool WillAnimalsStayInside()
+        {
+            return Game1.IsWinter | Game1.isRaining | Game1.isLightning;
         }
 
         /// <summary>
@@ -65,6 +71,7 @@ namespace FarmAutomation.BarnDoorAutomation
             {
                 return;
             }
+
             // ignore days when the doors should stay closed
             if (!IgnoreOpeningToday && WillAnimalsStayInside())
             {
@@ -85,10 +92,10 @@ namespace FarmAutomation.BarnDoorAutomation
                     Log.Debug($"Skipping door opening for first {_config.FirstDayInSpringToOpen} days in spring");
                     return;
                 }
+
                 SetAllDoors(DoorState.Open);
                 IgnoreOpeningToday = true;
             }
-
         }
 
         /// <summary>
@@ -98,15 +105,6 @@ namespace FarmAutomation.BarnDoorAutomation
         private bool SkipSpringDay()
         {
             return Game1.IsSpring && Game1.dayOfMonth < _config.FirstDayInSpringToOpen;
-        }
-
-        /// <summary>
-        /// check if the animals will stay inside
-        /// </summary>
-        /// <returns>true if the animals won't leave their buildings today</returns>
-        private static bool WillAnimalsStayInside()
-        {
-            return Game1.IsWinter | Game1.isRaining | Game1.isLightning;
         }
 
         /// <summary>
@@ -143,10 +141,8 @@ namespace FarmAutomation.BarnDoorAutomation
         {
             if (!IsDoorInDesiredState(building, desiredDoorState))
             {
-                var vector = new Vector2(
-                    building.animalDoor.X + building.tileX,
-                    building.animalDoor.Y + building.tileY
-                );
+                var vector = new Vector2(building.animalDoor.X + building.tileX, building.animalDoor.Y + building.tileY);
+
                 Log.Debug($"Setting door to {desiredDoorState} for building {building.buildingType}");
                 building.doAction(vector, Game1.player);
             }
@@ -157,11 +153,10 @@ namespace FarmAutomation.BarnDoorAutomation
         /// </summary>
         /// <param name="building">the building on which the door is located</param>
         /// <param name="state">the desired state for the door</param>
-        /// <returns></returns>
+        /// <returns>Returns if door is correctly open or closed</returns>
         private bool IsDoorInDesiredState(Building building, DoorState state)
         {
             return state == DoorState.Open ? building.animalDoorOpen : !building.animalDoorOpen;
         }
-
     }
 }

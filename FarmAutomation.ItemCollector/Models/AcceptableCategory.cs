@@ -3,18 +3,18 @@ using Newtonsoft.Json;
 
 namespace FarmAutomation.ItemCollector.Models
 {
-  public class AcceptableCategory
-  {
-    public int Index { get; set; }
+      public class AcceptableCategory
+      {
+            public AcceptableCategory(int index)
+            {
+                Index = index;
+                AmountRequired = 1;
+            }
 
-    [DefaultValue(1)]
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-    public int AmountRequired { get; set; }
+            public int Index { get; set; }
 
-    public AcceptableCategory(int index)
-    {
-      Index = index;
-      AmountRequired = 1;
-    }
-  }
+            [DefaultValue(1)]
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public int AmountRequired { get; set; }
+      }
 }

@@ -1,6 +1,6 @@
 ﻿namespace FarmAutomation.BarnDoorAutomation
 {
-    enum DoorState
+    public enum DoorState
     {
         Open,
         Closed

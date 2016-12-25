@@ -18,21 +18,21 @@ namespace FarmAutomation.Common
             maxItems = 24;
         }
 
-        public void ClearInventory()
-        {
-            items = new List<Item>(new Item[maxItems]);
-        }
-        
         /// <summary>
         /// need to override the constructor as for some reason the base sets the sprites on the main player which leads to a crash.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns GhostFarmer</returns>
         public static GhostFarmer CreateFarmer()
         {
             var prevSprite = Game1.player.sprite;
             var who = new GhostFarmer();
             Game1.player.sprite = prevSprite;
             return who;
+        }
+
+        public void ClearInventory()
+        {
+            items = new List<Item>(new Item[maxItems]);
         }
     }
 }

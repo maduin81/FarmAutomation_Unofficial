@@ -8,7 +8,9 @@ namespace FarmAutomation.BarnDoorAutomation
     public class BarnDoorAutomationConfiguration : ConfigurationBase
     {
         public int OpenDoorsAfter { get; set; }
+
         public int CloseDoorsAfter { get; set; }
+
         public int FirstDayInSpringToOpen { get; set; }
 
         public override void InitializeDefaults()

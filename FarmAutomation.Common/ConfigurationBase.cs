@@ -7,10 +7,10 @@ using StardewModdingAPI;
 namespace FarmAutomation.Common
 {
     public abstract class ConfigurationBase
-    {
+    {                        
         private static string _configPath;
 
-        public bool EnableMod { get; set; }
+        public bool EnableMod { get; set; }        
 
         public static T LoadConfiguration<T>() where T : ConfigurationBase
         {
@@ -24,8 +24,11 @@ namespace FarmAutomation.Common
                 config.InitializeDefaults();
                 File.WriteAllText(_configPath, JsonConvert.SerializeObject(config));
             }
+
             return config;
         }
+
+        public abstract void InitializeDefaults();
 
         private static T LoadConfig<T>()
         {
@@ -41,9 +44,8 @@ namespace FarmAutomation.Common
                     Log.Error($"Configuration load failed: {ex}");
                 }
             }
+
             return default(T);
         }
-
-        public abstract void InitializeDefaults();
     }
 }

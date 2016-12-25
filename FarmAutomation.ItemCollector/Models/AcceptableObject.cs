@@ -3,34 +3,34 @@ using Newtonsoft.Json;
 
 namespace FarmAutomation.ItemCollector.Models
 {
-  public class AcceptableObject
-  {
-    [DefaultValue(null)]
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-    public string Name { get; set; }
+      public class AcceptableObject
+      {
+            public AcceptableObject()
+            {
+            }
 
-    [DefaultValue(-1)]
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-    public int Index { get; set; }
+            public AcceptableObject(string name, int amountRequired = 1)
+            {
+                Name = name;
+                AmountRequired = amountRequired;
+            }
 
-    [DefaultValue(1)]
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-    public int AmountRequired { get; set; }
+            public AcceptableObject(int index, int amountRequired = 1)
+            {
+                Index = index;
+                AmountRequired = amountRequired;
+            }
 
-    public AcceptableObject()
-    {
-    }
+            [DefaultValue(null)]
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public string Name { get; set; }
 
-    public AcceptableObject(string name, int amountRequired = 1)
-    {
-      Name = name;
-      AmountRequired = amountRequired;
-    }
+            [DefaultValue(-1)]
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public int Index { get; set; }
 
-    public AcceptableObject(int index, int amountRequired = 1)
-    {
-      Index = index;
-      AmountRequired = amountRequired;
-    }
-  }
+            [DefaultValue(1)]
+            [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+            public int AmountRequired { get; set; }
+      }
 }

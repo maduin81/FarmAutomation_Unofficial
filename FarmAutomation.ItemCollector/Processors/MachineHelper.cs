@@ -1,15 +1,20 @@
+using System;
 using System.Linq;
 using FarmAutomation.Common;
+using FarmAutomation.ItemCollector.Models;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Objects;
+using Object = StardewValley.Object;
 
 namespace FarmAutomation.ItemCollector.Processors
 {
     public static class MachineHelper
     {
         public const int ChestMaxItems = 36;
+
         private static GhostFarmer _who;
+
         public static GhostFarmer Who => _who ?? (_who = GhostFarmer.CreateFarmer());
 
         public static void DailyReset()
@@ -17,65 +22,131 @@ namespace FarmAutomation.ItemCollector.Processors
             _who = null;
         }
 
-        public static void ProcessMachine(Object machine, Chest connectedChest, MaterialHelper materialHelper)
+        public static void ProcessMachine(Object machine, Chest connectedChest, MaterialHelper materialHelper, MachineConfig machineConfig)
         {
-            if (connectedChest.items.Any(i => i == null))
+            if (machineConfig != null)
             {
-                connectedChest.items.RemoveAll(i => i == null);
-            }
-            if (MachineIsReadyForHarvest(machine))
-            {
-                if (connectedChest.items.Count >= ChestMaxItems)
+                if (connectedChest.items.Any(i => i == null))
                 {
-                    Log.Error($"Your Chest in is already full, can't process the {machine.Name} as the item would get lost.");
-                    return;
+                    connectedChest.items.RemoveAll(i => i == null);
                 }
-                HandleFinishedObjectInMachine(machine, connectedChest);
-            }
-            if (MachineIsReadyForProcessing(machine))
-            {
-                var refillable = materialHelper.FindMaterialForMachine(machine.Name, connectedChest);
-                Object coal = null;
-                if (machine.Name == "Furnace")
+
+                if (MachineIsReadyForHarvest(machine))
                 {
-                    coal = materialHelper.FindMaterialForMachine("Coal", connectedChest);
-                    if (coal == null)
+                    if (connectedChest.items.Count >= ChestMaxItems && !connectedChest.items.Any(i =>
                     {
-                        //no coal to power the furnace
+                        var o = i as Object;
+                        return o != null && (machine.heldObject.parentSheetIndex == i.parentSheetIndex &&
+                                                       o.quality == machine.heldObject.quality &&
+                                                       machine.heldObject.stack <= i.getRemainingStackSpace());
+                    }))
+                    {
+                        Log.Error($"Your Chest in is already full, can't process the {machine.Name} as the item would get lost.");
                         return;
                     }
+
+                    HandleFinishedObjectInMachine(machine, connectedChest);
                 }
-                if (refillable != null)
-                {
-                    // furnace needs an additional coal
-                    if (machine.Name == "Furnace")
+
+                if (MachineIsReadyForProcessing(machine))
+                {                    
+                    var refillables = materialHelper.FindMaterialForMachine(machine.Name, connectedChest, machineConfig);
+
+                    Object coal = null;
+
+                    if (machineConfig.CoalRequired > 0)
                     {
-                        var coalAmount = materialHelper.GetMaterialAmountForMachine(machine.Name, coal);
-                        MoveItemToFarmer(coal, connectedChest, Who, coalAmount);
+                        coal = materialHelper.FindCoal(connectedChest, machineConfig.CoalRequired);
+                        if (coal == null)
+                        {
+                            // no coal to power the furnace
+                            return;
+                        }
                     }
 
-                    var materialAmount = materialHelper.GetMaterialAmountForMachine(machine.Name, refillable);
-                    if (materialAmount > refillable.Stack)
+                    if (refillables.Any())
                     {
-                        return;
-                    }
-                    var tempRefillable = MoveItemToFarmer(refillable, connectedChest, Who, materialAmount);
+                        if (machineConfig.CoalRequired > 0)
+                        {
+                            var coalAmount = machineConfig.CoalRequired;
+                            MoveItemToFarmer(coal, connectedChest, Who, coalAmount);
+                        }
 
-                    if (!PutItemInMachine(machine, tempRefillable, Who))
-                    {
-                        // item was not accepted by the machine, transfer it back to the chest
-                        Who.items.ForEach(i => connectedChest.addItem(i));
+                        foreach (var refillable in refillables)
+                        {                            
+                            var materialAmount = 1;
+                            var message = "OBJECT NOT FOUND";
+                            try
+                            {
+                                object found = null;
+                                if (machineConfig.AcceptableObjects != null)
+                                {
+                                    found = machineConfig.AcceptableObjects.FirstOrDefault(x => (x.Index == refillable.parentSheetIndex && string.IsNullOrWhiteSpace(x.Name)) || x.Name == refillable.Name);
+                                }
+
+                                if (found != null)
+                                {
+                                    materialAmount = ((AcceptableObject)found).AmountRequired;
+                                }
+                                else
+                                {
+                                    if (machineConfig.AcceptableCategories != null)
+                                    {
+                                        message = "CATEGORY NOT FOUND";
+                                        found = machineConfig.AcceptableCategories.FirstOrDefault(x => x.Index == refillable.category);
+                                        if (found != null)
+                                        {
+                                            materialAmount = ((AcceptableCategory)found).AmountRequired;
+                                        }
+                                    }
+                                }
+
+                                if (materialAmount <= refillable.Stack)
+                                {
+                                    var tempRefillable = MoveItemToFarmer(refillable, connectedChest, Who, materialAmount);
+
+                                    if (!PutItemInMachine(machine, tempRefillable, Who))
+                                    {
+                                        if (machineConfig.Name == "Seed Maker")
+                                        {
+                                            Log.Info("MACHINE ERROR: " + machineConfig.Name + " does not accept " + materialAmount + " items of type: " + tempRefillable.name + ".  Removing from list of Acceptable Objects.");
+                                            var badObject = machineConfig.AcceptableObjects.FirstOrDefault(t => t.Index == tempRefillable.parentSheetIndex || t.Name == tempRefillable.name);
+                                            if (badObject != null)
+                                            {
+                                                machineConfig.AcceptableObjects.Remove(badObject);
+                                            }
+                                            else
+                                            {
+                                                Log.Error("MACHINE ERROR: " + tempRefillable.name + " not found, possible issue with category of items.  Update the ItemCollectorConfiguration.json file and correct the categories for this machine.  Category: " + tempRefillable.category);
+                                            }
+                                        }
+
+                                        // item was not accepted by the machine, transfer it back to the chest
+                                        Who.items.ForEach(i => connectedChest.addItem(i));
+                                    }
+                                    else
+                                    {
+                                        Log.Info($"Refilled your {machine.Name} with a {refillable.Name} of {(ItemQuality)refillable.quality} quality. The machine now takes {machine.minutesUntilReady} minutes to process. You have {refillable.Stack} {refillable.Name} left");                                        
+                                    }
+
+                                    Who.ClearInventory();
+                                    return;
+                                }                                
+                            }
+                            catch (Exception e)
+                            {
+                                Log.Error(message);
+                                Log.Error("MACHINE: " + machineConfig.Name);
+                                machineConfig.AcceptableObjects.ForEach(x => Log.Error("OBJECT: " + x.Index + " | " + x.Name + " | " + x.AmountRequired));
+                                Log.Error(e.Message);
+                            }                            
+                        }
                     }
-                    else
-                    {
-                        Log.Info($"Refilled your {machine.Name} with a {refillable.Name} of {(ItemQuality)refillable.quality} quality. The machine now takes {machine.minutesUntilReady} minutes to process. You have {refillable.Stack} {refillable.Name} left");
-                    }
-                    Who.ClearInventory();
                 }
             }
         }
 
-        private static Object MoveItemToFarmer(Object itemToMove, Chest sourceChest, Farmer target, int amount)
+        public static Object MoveItemToFarmer(Object itemToMove, Chest sourceChest, Farmer target, int amount)
         {
             var temporaryItem = (Object)itemToMove.getOne();
             temporaryItem.Stack = amount;
@@ -93,6 +164,7 @@ namespace FarmAutomation.ItemCollector.Processors
                 Log.Error($"Your chest is already full. Cannot place item from {machine.Name} into it.");
                 return;
             }
+
             machine.checkForAction(Who);
             Who.items.ForEach(i =>
             {
@@ -110,6 +182,7 @@ namespace FarmAutomation.ItemCollector.Processors
             {
                 logMessage += $" The next {machine.heldObject.Name} will be ready in {machine.minutesUntilReady}";
             }
+
             Who.ClearInventory();
             Log.Info(logMessage);
         }
@@ -119,12 +192,10 @@ namespace FarmAutomation.ItemCollector.Processors
             return machine.readyForHarvest;
         }
 
-
         public static bool MachineIsReadyForProcessing(Object machine)
         {
             return !(machine is Chest) && machine.minutesUntilReady == 0 && machine.heldObject == null;
         }
-
 
         public static bool PutItemInMachine(Object machine, Object refillable, Farmer who)
         {
