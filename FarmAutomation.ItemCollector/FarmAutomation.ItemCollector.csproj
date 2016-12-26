@@ -85,7 +85,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>D:\GOG Games\Stardew Valley\Mods\FarmAutomation.ItemCollector\Newtonsoft.Json.dll</HintPath>
+      <HintPath>D:\GOG Games\Stardew Valley\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Stardew Valley">
       <HintPath>D:\GOG Games\Stardew Valley\Stardew Valley.exe</HintPath>
