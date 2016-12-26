@@ -14,5 +14,5 @@ else
 $files = -join($BuildOutput, "\*")
 #copy $files $modfolder
 
-$exclude = @('*.pdb','Lidgren.Network.dll', 'Newtonsoft.Json.dll', 'xTile.dll', 'Steamworks.NET.dll')
+$exclude = @('*.pdb','Lidgren.Network.dll', 'Newtonsoft.Json.dll', 'xTile.dll', 'Steamworks.NET.dll', 'GalaxyCSharp.dll', 'Mono.Cecil.dll', 'Mono.Cecil.Rocks.dll', 'StardewModdingAPI.AssemblyRewriters.dll')
 Copy-Item $files $ModFolder -Recurse -Force -Exclude $exclude

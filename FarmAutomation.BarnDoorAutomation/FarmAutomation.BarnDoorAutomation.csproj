@@ -64,7 +64,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>D:\GOG Games\Stardew Valley\Mods\FarmAutomation.BarnDoorAutomation\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>none</DebugType>
@@ -120,8 +120,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>cd $(SolutionDir)
+%25WINDIR%25\System32\WindowsPowerShell\v1.0\powershell.exe -Command ".\copyModsToGameDir.ps1 '$(ModFolder)$(ProjectName)' '$(TargetDir)'"
+
+IF "$(ConfigurationName)" == "Release" CALL %25WINDIR%25\System32\WindowsPowerShell\v1.0\powershell.exe -Command ".\CreateReleaseZip.ps1 '$(ModFolder)$(Projectname)' '$(ProjectName)_Unofficial-v@(VersionNumber)' '.\releases\'"</PostBuildEvent>
   </PropertyGroup>
   <Target Name="PostBuildMacros">
     <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
