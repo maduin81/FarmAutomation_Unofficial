@@ -17,6 +17,8 @@ namespace FarmAutomation.ItemCollector.Processors
 
         public static GhostFarmer Who => _who ?? (_who = GhostFarmer.CreateFarmer());
 
+        public static IMonitor Monitor { get; set; }
+
         public static void DailyReset()
         {
             _who = null;
@@ -41,7 +43,7 @@ namespace FarmAutomation.ItemCollector.Processors
                                                        machine.heldObject.stack <= i.getRemainingStackSpace());
                     }))
                     {
-                        Log.Error($"Your Chest in is already full, can't process the {machine.Name} as the item would get lost.");
+                        Monitor.Log($"Your Chest in is already full, can't process the {machine.Name} as the item would get lost.", LogLevel.Error);
                         return;
                     }
 
@@ -109,7 +111,7 @@ namespace FarmAutomation.ItemCollector.Processors
                                     {
                                         if (machineConfig.Name == "Seed Maker")
                                         {
-                                            Log.Info("MACHINE ERROR: " + machineConfig.Name + " does not accept " + materialAmount + " items of type: " + tempRefillable.name + ".  Removing from list of Acceptable Objects.");
+                                            Monitor.Log("MACHINE ERROR: " + machineConfig.Name + " does not accept " + materialAmount + " items of type: " + tempRefillable.name + ".  Removing from list of Acceptable Objects.", LogLevel.Info);
                                             var badObject = machineConfig.AcceptableObjects.FirstOrDefault(t => t.Index == tempRefillable.parentSheetIndex || t.Name == tempRefillable.name);
                                             if (badObject != null)
                                             {
@@ -117,7 +119,7 @@ namespace FarmAutomation.ItemCollector.Processors
                                             }
                                             else
                                             {
-                                                Log.Error("MACHINE ERROR: " + tempRefillable.name + " not found, possible issue with category of items.  Update the ItemCollectorConfiguration.json file and correct the categories for this machine.  Category: " + tempRefillable.category);
+                                                Monitor.Log("MACHINE ERROR: " + tempRefillable.name + " not found, possible issue with category of items.  Update the ItemCollectorConfiguration.json file and correct the categories for this machine.  Category: " + tempRefillable.category, LogLevel.Error);
                                             }
                                         }
 
@@ -126,7 +128,7 @@ namespace FarmAutomation.ItemCollector.Processors
                                     }
                                     else
                                     {
-                                        Log.Info($"Refilled your {machine.Name} with a {refillable.Name} of {(ItemQuality)refillable.quality} quality. The machine now takes {machine.minutesUntilReady} minutes to process. You have {refillable.Stack} {refillable.Name} left");                                        
+                                        Monitor.Log($"Refilled your {machine.Name} with a {refillable.Name} of {(ItemQuality)refillable.quality} quality. The machine now takes {machine.minutesUntilReady} minutes to process. You have {refillable.Stack} {refillable.Name} left", LogLevel.Info);                                        
                                     }
 
                                     Who.ClearInventory();
@@ -135,10 +137,10 @@ namespace FarmAutomation.ItemCollector.Processors
                             }
                             catch (Exception e)
                             {
-                                Log.Error(message);
-                                Log.Error("MACHINE: " + machineConfig.Name);
-                                machineConfig.AcceptableObjects.ForEach(x => Log.Error("OBJECT: " + x.Index + " | " + x.Name + " | " + x.AmountRequired));
-                                Log.Error(e.Message);
+                                Monitor.Log(message, LogLevel.Error);
+                                Monitor.Log("MACHINE: " + machineConfig.Name, LogLevel.Error);
+                                machineConfig.AcceptableObjects.ForEach(x => Monitor.Log("OBJECT: " + x.Index + " | " + x.Name + " | " + x.AmountRequired, LogLevel.Error));
+                                Monitor.Log(e.Message, LogLevel.Error);
                             }                            
                         }
                     }
@@ -161,7 +163,7 @@ namespace FarmAutomation.ItemCollector.Processors
             var logMessage = $"Collecting a {machine.heldObject?.Name} from your {machine.Name}.";
             if (connectedChest.items.Count > ChestMaxItems)
             {
-                Log.Error($"Your chest is already full. Cannot place item from {machine.Name} into it.");
+                Monitor.Log($"Your chest is already full. Cannot place item from {machine.Name} into it.", LogLevel.Error);
                 return;
             }
 
@@ -184,7 +186,7 @@ namespace FarmAutomation.ItemCollector.Processors
             }
 
             Who.ClearInventory();
-            Log.Info(logMessage);
+            Monitor.Log(logMessage, LogLevel.Info);
         }
 
         public static bool MachineIsReadyForHarvest(Object machine)

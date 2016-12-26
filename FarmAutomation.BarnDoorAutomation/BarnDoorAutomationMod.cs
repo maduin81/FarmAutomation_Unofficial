@@ -1,5 +1,4 @@
-﻿using FarmAutomation.Common;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -12,28 +11,33 @@ namespace FarmAutomation.BarnDoorAutomation
     /// </summary>
     public class BarnDoorAutomationMod : Mod
     {
-        private readonly BarnDoorAutomationConfiguration _config;
+        private BarnDoorAutomationConfiguration _config;
 
-        private bool _gameLoaded;
-
-        public BarnDoorAutomationMod()
-        {
-            Log.Info($"Initalizing {nameof(BarnDoorAutomationMod)}");
-            _config = ConfigurationBase.LoadConfiguration<BarnDoorAutomationConfiguration>();
-        }
+        private bool _gameLoaded;       
 
         public bool IgnoreOpeningToday { get; set; }
         
         public bool IgnoreClosingToday { get; set; }
 
+        public void InitializeMod()
+        {
+            Monitor.Log($"Initalizing {nameof(BarnDoorAutomationMod)}", LogLevel.Info);
+        }
+
         /// <summary>
         /// entry point for mods. events are subscribed here
         /// </summary>
-        /// <param name="objects">List of objects</param>
-        public override void Entry(params object[] objects)
+        /// <param name="helper">ImodHelper object</param>
+        public override void Entry(IModHelper helper)
         {
-            base.Entry(objects);
-            GameEvents.GameLoaded += (s, e) => { _gameLoaded = true; };
+            base.Entry(helper);
+            
+            GameEvents.GameLoaded += (s, e) =>
+            {
+                _gameLoaded = true;
+                _config = helper.ReadJsonFile<BarnDoorAutomationConfiguration>("BarnDoorAutomationConfiguration.json");
+            };
+
             TimeEvents.DayOfMonthChanged += (s, e) => { ResetDoorStatesOnNewDay(); };
             TimeEvents.TimeOfDayChanged += (s, e) => 
             {
@@ -75,7 +79,7 @@ namespace FarmAutomation.BarnDoorAutomation
             // ignore days when the doors should stay closed
             if (!IgnoreOpeningToday && WillAnimalsStayInside())
             {
-                Log.Debug("It's either winter or unpleasant weather today, the animals will stay inside. Animal doors won't be opened.");
+                Monitor.Log("It's either winter or unpleasant weather today, the animals will stay inside. Animal doors won't be opened.");
                 IgnoreOpeningToday = true;
             }
 
@@ -89,7 +93,7 @@ namespace FarmAutomation.BarnDoorAutomation
                 if (SkipSpringDay())
                 {
                     IgnoreOpeningToday = true;
-                    Log.Debug($"Skipping door opening for first {_config.FirstDayInSpringToOpen} days in spring");
+                    Monitor.Log($"Skipping door opening for first {_config.FirstDayInSpringToOpen} days in spring");
                     return;
                 }
 
@@ -120,7 +124,7 @@ namespace FarmAutomation.BarnDoorAutomation
                 // skip buildings still in construction
                 if (building.daysOfConstructionLeft > 0)
                 {
-                    Log.Debug($"Skipping {building.buildingType} because it's in construction");
+                    Monitor.Log($"Skipping {building.buildingType} because it's in construction");
                     return;
                 }
 
@@ -143,7 +147,7 @@ namespace FarmAutomation.BarnDoorAutomation
             {
                 var vector = new Vector2(building.animalDoor.X + building.tileX, building.animalDoor.Y + building.tileY);
 
-                Log.Debug($"Setting door to {desiredDoorState} for building {building.buildingType}");
+                Monitor.Log($"Setting door to {desiredDoorState} for building {building.buildingType}");
                 building.doAction(vector, Game1.player);
             }
         }

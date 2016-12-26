@@ -98,7 +98,6 @@
     </Reference>
     <Reference Include="StardewModdingAPI">
       <HintPath>D:\GOG Games\Stardew Valley\StardewModdingAPI.exe</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="System">
       <Private>False</Private>
@@ -116,7 +115,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigurationBase.cs" />
     <Compile Include="ConnectedTile.cs" />
     <Compile Include="GhostFarmer.cs" />
     <Compile Include="ItemFinder.cs" />
@@ -129,7 +127,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

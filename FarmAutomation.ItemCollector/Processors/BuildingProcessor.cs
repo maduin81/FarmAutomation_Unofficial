@@ -19,6 +19,8 @@ namespace FarmAutomation.ItemCollector.Processors
 
         private const int PetrifiedSlimeParentSheetIndex = 557;
 
+        private static IMonitor _monitor;
+
         private readonly List<string> _barnTools = new List<string>
         {
             "Milk Pail",
@@ -39,11 +41,12 @@ namespace FarmAutomation.ItemCollector.Processors
 
         private bool _dailiesDone;        
 
-        public BuildingProcessor(bool petAnimals, int additionalFriendshipFromCollecting, bool muteWhenCollecting)
+        public BuildingProcessor(bool petAnimals, int additionalFriendshipFromCollecting, bool muteWhenCollecting, IMonitor monitor)
         {
             PetAnimals = petAnimals;
             AdditionalFriendshipFromCollecting = additionalFriendshipFromCollecting;
             MuteWhenCollecting = muteWhenCollecting;
+            _monitor = monitor;
         }
 
         public bool PetAnimals { get; set; }
@@ -63,8 +66,8 @@ namespace FarmAutomation.ItemCollector.Processors
             {
                 SoundHelper.MuteTemporary(1500);
             }
-
-            Log.Info("Petting animals and processing their buildings to collect items");
+           
+            _monitor.Log("Petting animals and processing their buildings to collect items", LogLevel.Info);
             var farms = Game1.locations.OfType<Farm>();
             foreach (var farm in farms)
             {
@@ -79,7 +82,7 @@ namespace FarmAutomation.ItemCollector.Processors
                         PetAnimal(animal);
                     }
 
-                    Log.Info("All animals have been petted.");
+                    _monitor.Log("All animals have been petted.", LogLevel.Info);
                 }
 
                 foreach (var building in farm.buildings)
@@ -108,7 +111,7 @@ namespace FarmAutomation.ItemCollector.Processors
 
                         if (outsideAnimalCount > 0)
                         {
-                            Log.Debug(
+                            _monitor.Log(
                                 $"Found {outsideAnimalCount} animals wandering outside. collected their milk or wool and put it in the chest in their {building.buildingType}");
                         }
 
@@ -120,8 +123,8 @@ namespace FarmAutomation.ItemCollector.Processors
                         }
 
                         if (insideAnimalCount > 0)
-                        {
-                            Log.Debug(
+                        {                                                        
+                            _monitor.Log(
                                 $"Found {insideAnimalCount} animals in the {building.buildingType}. Collected their milk or wool and put it in the chest in their home.");
                         }
                     }
@@ -170,7 +173,7 @@ namespace FarmAutomation.ItemCollector.Processors
                             if (chest.addItem(slimeStack) == null)
                             {
                                 building.indoors.objects.Remove(pair.Key);
-                                Log.Info($"Collected {number} Slimes from your Slime Hutch");
+                                _monitor.Log($"Collected {number} Slimes from your Slime Hutch", LogLevel.Info);
                             }
                         }
                     }
@@ -227,7 +230,7 @@ namespace FarmAutomation.ItemCollector.Processors
                 });
             }
     
-            Log.Debug("Starting search for connected locations at Farm");
+            _monitor.Log("Starting search for connected locations at Farm");
             foreach (var building in buildings)
             {
                 if (building.BuildingConfig.HasInput)
@@ -260,7 +263,7 @@ namespace FarmAutomation.ItemCollector.Processors
             if (chest != null)
             {
                 var items = new List<Object>();
-                Log.Debug($"{building.BuildingConfig.Name} found and chest connected.  Processing {direction.ToLower()}put.");
+                _monitor.Log($"{building.BuildingConfig.Name} found and chest connected.  Processing {direction.ToLower()}put.");
                 try
                 {
                     var i = 0;
@@ -325,11 +328,11 @@ namespace FarmAutomation.ItemCollector.Processors
                     }
 
                     ItemHelper.TransferBetweenInventories((direction == "IN") ? chest : building.Output, (direction == "IN") ? building.Input : chest, items);
-                    Log.Info($"{building.BuildingConfig.Name} {direction.ToLower()}put processed: {i} stacks moved.");
+                    _monitor.Log($"{building.BuildingConfig.Name} {direction.ToLower()}put processed: {i} stacks moved.", LogLevel.Info);
                 }
                 catch (Exception exception)
                 {
-                    Log.Error(exception.Message);
+                    _monitor.Log(exception.Message, LogLevel.Error);
                 }
             }
         }
@@ -346,7 +349,7 @@ namespace FarmAutomation.ItemCollector.Processors
                     building.indoors.Objects.Remove(c.Key);
                 }
 
-                Log.Debug($"Collected a {c.Value.Name} and put it into the chest in your {building.buildingType}");
+                _monitor.Log($"Collected a {c.Value.Name} and put it into the chest in your {building.buildingType}");
             });
         }
 
@@ -366,7 +369,7 @@ namespace FarmAutomation.ItemCollector.Processors
                 {
                     if (chest.items.Count >= 36)
                     {
-                        Log.Error($"A {animal.type} is ready for harvesting it's produce. Unfortunately the chest in it's home is already full.");
+                        _monitor.Log($"A {animal.type} is ready for harvesting it's produce. Unfortunately the chest in it's home is already full.", LogLevel.Error);
 
                         // show message that the chest is full
                         return;

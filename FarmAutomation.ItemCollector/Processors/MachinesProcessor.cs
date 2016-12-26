@@ -11,19 +11,22 @@ using StardewValley.Objects;
 namespace FarmAutomation.ItemCollector.Processors
 {
     public class MachinesProcessor
-    {        
+    {
+        private static IMonitor _monitor;
+
         private readonly List<string> _gameLocationsToSearch;
 
         private readonly bool _allowDiagonalConnectionsForAllItems;
 
         private readonly MaterialHelper _materialHelper;
 
-        private readonly List<MachineConfig> _machineConfigs;
+        private readonly List<MachineConfig> _machineConfigs;        
 
         private Dictionary<string, Dictionary<Vector2, Chest>> _connectedChestsCache = new Dictionary<string, Dictionary<Vector2, Chest>>();
 
-        public MachinesProcessor(List<MachineConfig> machineConfigs, List<string> gameLocationsToSearch, bool addBuildingsToLocations, bool allowDiagonalConnectionsForAllItems)
+        public MachinesProcessor(List<MachineConfig> machineConfigs, List<string> gameLocationsToSearch, bool addBuildingsToLocations, bool allowDiagonalConnectionsForAllItems, IMonitor monitor)
         {
+            _monitor = monitor;
             AddBuildingsToLocations = addBuildingsToLocations;
             _machineConfigs = (from x in machineConfigs
                                where x.CollectFrom || x.InsertItems
@@ -66,7 +69,7 @@ namespace FarmAutomation.ItemCollector.Processors
         public void ValidateGameLocations()
         {
             var locations = string.Join(", ", Game1.locations.Select(l => l.Name));
-            Log.Info($"Loading locations. These are all the currently known locations in the game:\r\n{locations}");
+            _monitor.Log($"Loading locations. These are all the currently known locations in the game:\r\n{locations}", LogLevel.Info);
 
             lock (_gameLocationsToSearch)
             {
@@ -75,7 +78,7 @@ namespace FarmAutomation.ItemCollector.Processors
                     var location = Game1.getLocationFromName(locationName);
                     if (location == null)
                     {
-                        Log.Error($"Could not find a location with the name of '{locationName}'");
+                        _monitor.Log($"Could not find a location with the name of '{locationName}'", LogLevel.Error);
                         _gameLocationsToSearch.Remove(locationName);
                     }
                 }
@@ -98,6 +101,7 @@ namespace FarmAutomation.ItemCollector.Processors
             foreach (var gameLocation in GetLocations())
             {
                 MachineHelper.Who.currentLocation = gameLocation;
+                MachineHelper.Monitor = _monitor;
                 lock (_connectedChestsCache)
                 {
                     if (!_connectedChestsCache.ContainsKey(LocationHelper.GetName(gameLocation)))
@@ -132,7 +136,7 @@ namespace FarmAutomation.ItemCollector.Processors
 
         public void InvalidateCacheForLocation(GameLocation location)
         {
-            if (_connectedChestsCache != null && _connectedChestsCache.ContainsKey(LocationHelper.GetName(location)))
+            if (_connectedChestsCache != null && location != null && _connectedChestsCache.ContainsKey(LocationHelper.GetName(location)))
             {
                 _connectedChestsCache.Remove(LocationHelper.GetName(location));
             }
@@ -143,7 +147,7 @@ namespace FarmAutomation.ItemCollector.Processors
             if (gameLocation != null)
             {
                 var cacheToAdd = new Dictionary<Vector2, Chest>();
-                Log.Debug($"Starting search for connected locations at {LocationHelper.GetName(gameLocation)}");
+                _monitor.Log($"Starting search for connected locations at {LocationHelper.GetName(gameLocation)}");
                 var items = ItemFinder.FindObjectsWithName(gameLocation, (from x in _machineConfigs select x.Name).ToList());
                 foreach (var valuePair in items)
                 {
@@ -182,7 +186,7 @@ namespace FarmAutomation.ItemCollector.Processors
                     }
                 }
 
-                Log.Debug($"Searched your {LocationHelper.GetName(gameLocation)} for machines to collect from and found a total of {_connectedChestsCache[LocationHelper.GetName(gameLocation)].Count} locations to look for");
+                _monitor.Log($"Searched your {LocationHelper.GetName(gameLocation)} for machines to collect from and found a total of {_connectedChestsCache[LocationHelper.GetName(gameLocation)].Count} locations to look for");
             }
         }        
     }

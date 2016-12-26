@@ -1,42 +1,13 @@
 ﻿using System.Collections.Generic;
-using FarmAutomation.Common;
 using FarmAutomation.ItemCollector.Models;
 
 namespace FarmAutomation.ItemCollector
 {
-    public class ItemCollectorConfiguration : ConfigurationBase
+    public class ItemCollectorConfiguration
     {
         public ItemCollectorConfiguration()
         {
             FlooringsToConsiderConnectors = new List<int>();
-        }
-
-        public bool PetAnimals { get; set; }
-
-        public int AdditionalFriendshipFromCollecting { get; set; }
-
-        public bool MuteAnimalsWhenCollecting { get; set; }
-
-        public string MachinesToCollectFrom { get; set; }
-
-        public string ItemsToConsiderConnectors { get; set; }
-
-        public bool AllowDiagonalConnectionsForAllItems { get; set; }
-
-        public List<int> FlooringsToConsiderConnectors { get; set; }
-
-        public string LocationsToSearch { get; set; }
-
-        public bool AddBuildingsToLocations { get; set; }
-
-        public int MuteWhileCollectingFromMachines { get; set; }
-
-        public List<MachineConfig> MachineConfigs { get; set; }
-
-        public List<MachineBuildingConfig> MachineBuildingConfigs { get; set; }
-
-        public override void InitializeDefaults()
-        {
             PetAnimals = true;
             AdditionalFriendshipFromCollecting = 5;
             EnableMod = true;
@@ -202,5 +173,31 @@ namespace FarmAutomation.ItemCollector
                 }
             };
         }
+
+        public bool PetAnimals { get; set; }
+
+        public int AdditionalFriendshipFromCollecting { get; set; }
+
+        public bool MuteAnimalsWhenCollecting { get; set; }
+
+        public string MachinesToCollectFrom { get; set; }
+
+        public string ItemsToConsiderConnectors { get; set; }
+
+        public bool AllowDiagonalConnectionsForAllItems { get; set; }
+
+        public List<int> FlooringsToConsiderConnectors { get; set; }
+
+        public string LocationsToSearch { get; set; }
+
+        public bool AddBuildingsToLocations { get; set; }
+
+        public int MuteWhileCollectingFromMachines { get; set; }
+
+        public List<MachineConfig> MachineConfigs { get; set; }
+
+        public List<MachineBuildingConfig> MachineBuildingConfigs { get; set; }
+
+        public bool EnableMod { get; set; }
     }
 }

@@ -24,7 +24,7 @@ namespace FarmAutomation.ItemCollector.Models
         }
 
         public string Name { get; set; }
-
+        
         [DefaultValue(0)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public int CoalRequired { get; set; }
