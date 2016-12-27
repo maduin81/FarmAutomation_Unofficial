@@ -5,13 +5,17 @@ namespace FarmAutomation.ItemCollector
 {
     public class ItemCollectorConfiguration
     {
-        public ItemCollectorConfiguration()
+        public ItemCollectorConfiguration(bool allowDiagonalConnectionsForAllItems, int muteWhileCollectingFromMachines, bool muteAnimalsWhenCollecting)
         {
+            AllowDiagonalConnectionsForAllItems = allowDiagonalConnectionsForAllItems;
+            MuteWhileCollectingFromMachines = muteWhileCollectingFromMachines;
+            MuteAnimalsWhenCollecting = muteAnimalsWhenCollecting;
             FlooringsToConsiderConnectors = new List<int>();
             PetAnimals = true;
             AdditionalFriendshipFromCollecting = 5;
             EnableMod = true;
             LocationsToSearch = "Farm, Greenhouse, FarmHouse, FarmCave, Beach, Cellar";
+            BuildingsToIgnore = string.Empty;
             FlooringsToConsiderConnectors = new List<int> { 6 };
             AddBuildingsToLocations = true;
             MachineConfigs = new List<MachineConfig>
@@ -180,10 +184,6 @@ namespace FarmAutomation.ItemCollector
 
         public bool MuteAnimalsWhenCollecting { get; set; }
 
-        public string MachinesToCollectFrom { get; set; }
-
-        public string ItemsToConsiderConnectors { get; set; }
-
         public bool AllowDiagonalConnectionsForAllItems { get; set; }
 
         public List<int> FlooringsToConsiderConnectors { get; set; }
@@ -199,5 +199,7 @@ namespace FarmAutomation.ItemCollector
         public List<MachineBuildingConfig> MachineBuildingConfigs { get; set; }
 
         public bool EnableMod { get; set; }
+
+        public string BuildingsToIgnore { get; set; }
     }
 }

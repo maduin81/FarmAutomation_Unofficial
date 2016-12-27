@@ -52,7 +52,7 @@ namespace FarmAutomation.ItemCollector.Processors
 
                 if (MachineIsReadyForProcessing(machine))
                 {                    
-                    var refillables = materialHelper.FindMaterialForMachine(machine.Name, connectedChest, machineConfig);
+                    var refillables = materialHelper.FindMaterialForMachine(connectedChest, machineConfig);
 
                     Object coal = null;
 

@@ -9,7 +9,7 @@ namespace FarmAutomation.ItemCollector.Processors
 {
     public class MaterialHelper
     {
-        public List<Object> FindMaterialForMachine(string machineName, Chest chest, MachineConfig machineConfig)
+        public List<Object> FindMaterialForMachine(Chest chest, MachineConfig machineConfig)
         {
             var ret = chest?.items.Where(i => i is Object 
                 && ((Object)i).quality <= machineConfig.MaxQuality

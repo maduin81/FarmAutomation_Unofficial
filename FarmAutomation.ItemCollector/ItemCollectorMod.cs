@@ -19,47 +19,7 @@ namespace FarmAutomation.ItemCollector
         private List<MachineBuildingConfig> _machineBuildingConfigs;
 
         private bool _gameLoaded;
-
-        public void InitializeMod()
-        {
-            Monitor.Log($"Initalizing {nameof(ItemCollectorMod)}", LogLevel.Info);
-            
-            _config.MachineConfigs.ForEach(t =>
-            {
-                if (t.AcceptableObjects == null)
-                {
-                    t.AcceptableObjects = new List<AcceptableObject>();
-                }
-
-                if (t.AcceptableCategories == null)
-                {
-                    t.AcceptableCategories = new List<AcceptableCategory>();
-                }
-            });
-            
-            _machineBuildingConfigs = _config.MachineBuildingConfigs;
-            
-            var machineConfigs = _config.MachineConfigs;
-            var config = machineConfigs.FirstOrDefault(t => t.Name == "Seed Maker");
-            
-            if (config != null)
-            {
-                config.AcceptableObjects = GetSeedMakerMaterials();
-            }
-            
-            ItemFinder.ConnectorItems = machineConfigs.Where(t => t.AllowConnection).ToList().Select(t => t.Name).ToList();
-            ItemFinder.ConnectorFloorings = _config.FlooringsToConsiderConnectors;
-            
-            var locationsToSearch = _config.LocationsToSearch.Split(',').Select(v => v.Trim()).ToList();
-            
-            _machinesProcessor = new MachinesProcessor(machineConfigs, locationsToSearch, _config.AddBuildingsToLocations, _config.AllowDiagonalConnectionsForAllItems, Monitor)
-            {
-                MuteWhileCollectingFromMachines = Math.Max(0, Math.Min(5000, _config.MuteWhileCollectingFromMachines))
-            };
-            
-            _buildingProcessor = new BuildingProcessor(_config.PetAnimals, _config.AdditionalFriendshipFromCollecting, _config.MuteAnimalsWhenCollecting, Monitor);
-        }
-
+        
         public override void Entry(IModHelper helper)
         {                   
             base.Entry(helper);            
@@ -70,7 +30,7 @@ namespace FarmAutomation.ItemCollector
             {
                 _gameLoaded = true;
 
-                InitializeMod();
+                _InitializeMod();
 
                 try
                 {
@@ -147,16 +107,56 @@ namespace FarmAutomation.ItemCollector
 #endif
         }
 
-        private static List<AcceptableObject> GetSeedMakerMaterials()
+        private static List<AcceptableObject> _GetSeedMakerMaterials()
         {
             if (Game1.temporaryContent == null)
             {
                 Game1.temporaryContent = new LocalizedContentManager(Game1.content.ServiceProvider, Game1.content.RootDirectory);
             }
-            
+
             return (from v in Game1.temporaryContent.Load<Dictionary<int, string>>(@"Data\Crops").Values
                     select v.Split('/') into s
                     select new AcceptableObject(Convert.ToInt32(s[3]))).ToList();
+        }
+
+        private void _InitializeMod()
+        {
+            Monitor.Log($"Initalizing {nameof(ItemCollectorMod)}", LogLevel.Info);
+
+            _config.MachineConfigs.ForEach(t =>
+            {
+                if (t.AcceptableObjects == null)
+                {
+                    t.AcceptableObjects = new List<AcceptableObject>();
+                }
+
+                if (t.AcceptableCategories == null)
+                {
+                    t.AcceptableCategories = new List<AcceptableCategory>();
+                }
+            });
+
+            _machineBuildingConfigs = _config.MachineBuildingConfigs;
+
+            var machineConfigs = _config.MachineConfigs;
+            var config = machineConfigs.FirstOrDefault(t => t.Name == "Seed Maker");
+
+            if (config != null)
+            {
+                config.AcceptableObjects = _GetSeedMakerMaterials();
+            }
+
+            ItemFinder.ConnectorItems = machineConfigs.Where(t => t.AllowConnection).ToList().Select(t => t.Name).ToList();
+            ItemFinder.ConnectorFloorings = _config.FlooringsToConsiderConnectors;
+
+            var locationsToSearch = _config.LocationsToSearch.Split(',').Select(v => v.Trim()).ToList();
+
+            _machinesProcessor = new MachinesProcessor(machineConfigs, locationsToSearch, _config.AddBuildingsToLocations, _config.AllowDiagonalConnectionsForAllItems, Monitor)
+            {
+                MuteWhileCollectingFromMachines = Math.Max(0, Math.Min(5000, _config.MuteWhileCollectingFromMachines))
+            };
+
+            _buildingProcessor = new BuildingProcessor(_config.PetAnimals, _config.AdditionalFriendshipFromCollecting, _config.MuteAnimalsWhenCollecting, _config.BuildingsToIgnore, Monitor);
         }
     }
 }

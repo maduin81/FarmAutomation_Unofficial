@@ -41,11 +41,12 @@ namespace FarmAutomation.ItemCollector.Processors
 
         private bool _dailiesDone;        
 
-        public BuildingProcessor(bool petAnimals, int additionalFriendshipFromCollecting, bool muteWhenCollecting, IMonitor monitor)
+        public BuildingProcessor(bool petAnimals, int additionalFriendshipFromCollecting, bool muteWhenCollecting, string buildingsToIgnore, IMonitor monitor)
         {
             PetAnimals = petAnimals;
             AdditionalFriendshipFromCollecting = additionalFriendshipFromCollecting;
             MuteWhenCollecting = muteWhenCollecting;
+            BuildingsToIgnore = buildingsToIgnore;
             _monitor = monitor;
         }
 
@@ -54,6 +55,8 @@ namespace FarmAutomation.ItemCollector.Processors
         public int AdditionalFriendshipFromCollecting { get; set; }
 
         public bool MuteWhenCollecting { get; set; }
+
+        public string BuildingsToIgnore { get; set; }
 
         public void ProcessAnimalBuildings()
         {
@@ -93,14 +96,14 @@ namespace FarmAutomation.ItemCollector.Processors
                         continue;
                     }
 
-                    if (building is Coop)
+                    if (building is Coop && !BuildingsToIgnore.Contains(building.GetType().ToString().Split('.').Last()))
                     {
-                        // collect eggs
+                        // collect eggs                        
                         CollectItemsFromBuilding(building, chest, _coopCollectibles);
                     }
 
-                    if (building is Barn)
-                    {
+                    if (building is Barn && !BuildingsToIgnore.Contains(building.GetType().ToString().Split('.').Last()))
+                    {                        
                         var outsideAnimalCount = 0;
                         foreach (
                             var outsideAnimal in farm.animals.Values.Where(a => a.home is Barn && a.home == building))
@@ -129,8 +132,8 @@ namespace FarmAutomation.ItemCollector.Processors
                         }
                     }
 
-                    if (building.indoors is SlimeHutch)
-                    {
+                    if (building.indoors is SlimeHutch && !BuildingsToIgnore.Contains(building.GetType().ToString().Split('.').Last()))
+                    {                        
                         // collect goop
                         foreach (var pair in building.indoors.objects.Where(o => o.Value.Name == "Slime Ball").ToList())
                         {

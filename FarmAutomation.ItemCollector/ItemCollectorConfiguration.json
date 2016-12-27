@@ -2,6 +2,9 @@
 	/* Default: true. If true, animals will be petted each day. If false animals will not be petted each day. */
 	"PetAnimals": true,
 
+	/* Adding comma-separated buildings to this list will prevent buildings from processing, Example: "Coop, Barn, SlimeHutch".  This will not stop Sheds from processing. */
+	"BuildingsToIgnore": "", 
+
 	/* Default: 5. The amount of friendship each animal gains when you collect milk/wool from it. If no chest is in the barn/coop where the animal lives, no items will be collected. */
 	"AdditionalFriendshipFromCollecting": 5,
 
@@ -190,7 +193,7 @@
 			"InsertItems": true,
 			"AcceptableObjects": [
 				{ "Name": "Corn" },
-				{ "Name": "Red Mushroom" },
+				{ "Name": "Sunflower" },
 				{ "Name": "Truffle" },
 				{ "Name": "Sunflower Seeds" }
 			]
