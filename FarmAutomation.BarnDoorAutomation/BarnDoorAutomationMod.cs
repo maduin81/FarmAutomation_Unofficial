@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -24,28 +25,32 @@ namespace FarmAutomation.BarnDoorAutomation
             Monitor.Log($"Initalizing {nameof(BarnDoorAutomationMod)}", LogLevel.Info);
         }
 
-        /// <summary>
-        /// entry point for mods. events are subscribed here
-        /// </summary>
-        /// <param name="helper">ImodHelper object</param>
+        /// <summary>The mod entry point, called after the mod is first loaded.</summary>
+        /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
         {
-            base.Entry(helper);
-            
-            GameEvents.GameLoaded += (s, e) =>
-            {
-                _gameLoaded = true;
-                _config = helper.ReadJsonFile<BarnDoorAutomationConfiguration>("BarnDoorAutomationConfiguration.json");
-            };
+            GameEvents.GameLoaded += GameEvents_GameLoaded;
+            TimeEvents.DayOfMonthChanged += TimeEvents_DayOfMonthChanged;
+            TimeEvents.TimeOfDayChanged += TimeEvents_TimeOfDayChanged;
+        }
 
-            TimeEvents.DayOfMonthChanged += (s, e) => { ResetDoorStatesOnNewDay(); };
-            TimeEvents.TimeOfDayChanged += (s, e) => 
+        private void GameEvents_GameLoaded(object sender, EventArgs eventArgs)
+        {
+            _gameLoaded = true;
+            _config = Helper.ReadJsonFile<BarnDoorAutomationConfiguration>("BarnDoorAutomationConfiguration.json");
+        }
+
+        private void TimeEvents_DayOfMonthChanged(object sender, EventArgsIntChanged eventArgsIntChanged)
+        {
+            ResetDoorStatesOnNewDay();
+        }
+
+        private void TimeEvents_TimeOfDayChanged(object sender, EventArgsIntChanged eventArgsIntChanged)
+        {
+            if (_gameLoaded && _config.EnableMod)
             {
-                if (_gameLoaded && _config.EnableMod)
-                {
-                    ProcessIfTimeAndWeatherFits();
-                }
-            };
+                ProcessIfTimeAndWeatherFits();
+            }
         }
 
         /// <summary>

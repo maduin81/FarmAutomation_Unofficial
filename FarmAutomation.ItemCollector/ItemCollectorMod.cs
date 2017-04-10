@@ -12,100 +12,111 @@ using StardewValley;
 namespace FarmAutomation.ItemCollector
 {
     public class ItemCollectorMod : Mod
-    {        
+    {
         private MachinesProcessor _machinesProcessor;
         private BuildingProcessor _buildingProcessor;
         private ItemCollectorConfiguration _config;
         private List<MachineBuildingConfig> _machineBuildingConfigs;
 
         private bool _gameLoaded;
-        
+
+        /// <summary>The mod entry point, called after the mod is first loaded.</summary>
+        /// <param name="helper">Provides simplified APIs for writing mods.</param>
         public override void Entry(IModHelper helper)
-        {                   
-            base.Entry(helper);            
+        {
+            _config = helper.ReadJsonFile<ItemCollectorConfiguration>("ItemCollectorConfiguration.json");
 
-            _config = helper.ReadJsonFile<ItemCollectorConfiguration>("ItemCollectorConfiguration.json");                                    
-
-            GameEvents.GameLoaded += (s, e) =>
-            {
-                _gameLoaded = true;
-
-                _InitializeMod();
-
-                try
-                {
-                    var pathOnDisk = helper.DirectoryPath;
-
-                    File.WriteAllLines(Path.Combine(pathOnDisk, "Objects.txt"), Game1.objectInformation.Select(t => t.Key.ToString() + " - " + t.Value).ToArray());
-                    File.WriteAllLines(Path.Combine(pathOnDisk, "CraftingItems.txt"), Game1.bigCraftablesInformation.Select(t => t.Key.ToString() + " - " + t.Value).ToArray());                    
-                }
-                catch
-                {                    
-                    Monitor.Log("Unable to write item files.  Skipping.");
-                }
-            };            
-
-            TimeEvents.DayOfMonthChanged += (s, e) =>
-            {
-                if (_config.EnableMod)
-                {
-                    Monitor.Log("It's a new day. Resetting the Item Collector mod");
-                    _machinesProcessor.ValidateGameLocations();
-                    _buildingProcessor.DailyReset();
-                    _machinesProcessor.DailyReset();
-                }
-            };
-            TimeEvents.TimeOfDayChanged += (s, e) =>
-            {
-                if (_gameLoaded && _config.EnableMod)
-                {
-                    try
-                    {
-                        _buildingProcessor.ProcessAnimalBuildings();
-                        _buildingProcessor.ProcessMachineBuildings(_machineBuildingConfigs);
-                        _machinesProcessor.ProcessMachines();
-                    }
-                    catch (Exception ex)
-                    {
-                        Monitor.Log($"an error occured with the automation mod: {ex}", LogLevel.Error);
-                        _machinesProcessor.DailyReset();
-                    }
-                }
-            };
-            PlayerEvents.InventoryChanged += (s, c) =>
-            {
-                if (_gameLoaded && ItemFinder.HaveConnectorsInInventoryChanged(c))
-                {
-                    try
-                    {
-                        _buildingProcessor.DailyReset();
-                        _machinesProcessor.InvalidateCacheForLocation(Game1.player.currentLocation);
-                    }
-                    catch (Exception ex)
-                    {
-                        Monitor.Log($"an error occured with the automation mod: {ex}", LogLevel.Error);
-                        _machinesProcessor.DailyReset();
-                    }
-                }
-            };
+            GameEvents.GameLoaded += GameEvents_GameLoaded;
+            TimeEvents.DayOfMonthChanged += TimeEvents_DayOfMonthChanged;
+            TimeEvents.TimeOfDayChanged += TimeEvents_TimeOfDayChanged;
+            PlayerEvents.InventoryChanged += PlayerEvents_InventoryChanged;
 #if DEBUG
             // allow keypresses to initiate events for easier debugging.
-            ControlEvents.KeyPressed += (s, c) =>
-            {
-                if (_gameLoaded && c.KeyPressed == Keys.K)
-                {
-                    _buildingProcessor.ProcessAnimalBuildings();
-                    _machinesProcessor.ProcessMachines();
-                }
-
-                if (_gameLoaded && c.KeyPressed == Keys.P)
-                {
-                    _buildingProcessor.DailyReset();
-                    _machinesProcessor.DailyReset();
-                }
-            };
+            ControlEvents.KeyPressed += this.ControlEvents_KeyPressed;
 #endif
         }
+
+        private void GameEvents_GameLoaded(object sender, EventArgs e)
+        {
+            _gameLoaded = true;
+
+            _InitializeMod();
+
+            try
+            {
+                var pathOnDisk = Helper.DirectoryPath;
+
+                File.WriteAllLines(Path.Combine(pathOnDisk, "Objects.txt"), Game1.objectInformation.Select(t => t.Key.ToString() + " - " + t.Value).ToArray());
+                File.WriteAllLines(Path.Combine(pathOnDisk, "CraftingItems.txt"), Game1.bigCraftablesInformation.Select(t => t.Key.ToString() + " - " + t.Value).ToArray());
+            }
+            catch
+            {
+                Monitor.Log("Unable to write item files.  Skipping.");
+            }
+        }
+
+        private void TimeEvents_DayOfMonthChanged(object sender, EventArgsIntChanged e)
+        {
+            if (_config.EnableMod)
+            {
+                Monitor.Log("It's a new day. Resetting the Item Collector mod");
+                _machinesProcessor.ValidateGameLocations();
+                _buildingProcessor.DailyReset();
+                _machinesProcessor.DailyReset();
+            }
+        }
+
+        private void TimeEvents_TimeOfDayChanged(object sender, EventArgsIntChanged e)
+        {
+            if (_gameLoaded && _config.EnableMod)
+            {
+                try
+                {
+                    _buildingProcessor.ProcessAnimalBuildings();
+                    _buildingProcessor.ProcessMachineBuildings(_machineBuildingConfigs);
+                    _machinesProcessor.ProcessMachines();
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"an error occured with the automation mod: {ex}", LogLevel.Error);
+                    _machinesProcessor.DailyReset();
+                }
+            }
+        }
+
+        private void PlayerEvents_InventoryChanged(object sender, EventArgsInventoryChanged e)
+        {
+            if (_gameLoaded && ItemFinder.HaveConnectorsInInventoryChanged(e))
+            {
+                try
+                {
+                    _buildingProcessor.DailyReset();
+                    _machinesProcessor.InvalidateCacheForLocation(Game1.player.currentLocation);
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"an error occured with the automation mod: {ex}", LogLevel.Error);
+                    _machinesProcessor.DailyReset();
+                }
+            }
+        }
+
+#if DEBUG
+        private void ControlEvents_KeyPressed(object sender, EventArgsKeyPressed e)
+        {
+            if (_gameLoaded && e.KeyPressed == Keys.K)
+            {
+                _buildingProcessor.ProcessAnimalBuildings();
+                _machinesProcessor.ProcessMachines();
+            }
+
+            if (_gameLoaded && e.KeyPressed == Keys.P)
+            {
+                _buildingProcessor.DailyReset();
+                _machinesProcessor.DailyReset();
+            }
+        }
+#endif
 
         private static List<AcceptableObject> _GetSeedMakerMaterials()
         {
