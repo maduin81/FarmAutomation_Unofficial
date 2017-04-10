@@ -1,0 +1,22 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="AfterBuild">
+    <!-- copy files to Mods folder -->
+    <ItemGroup>
+      <ModFiles Include="$(TargetDir)\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ModFiles)" DestinationFolder="$(GamePath)\Mods\$(TargetName)\%(RecursiveDir)" SkipUnchangedFiles="false" />
+
+    <!-- create release zip -->
+    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+      <Output TaskParameter="Assemblies" ItemName="Targets" />
+    </GetAssemblyIdentity>
+    <ItemGroup>
+      <VersionNumber Include="@(Targets->'%(Version)')" />
+    </ItemGroup>
+    <Exec
+      Condition="'$(OS)' == 'Windows_NT' AND '$(ConfigurationName)' == 'Release'"
+      Command="%WINDIR%\System32\WindowsPowerShell\v1.0\powershell -Command &quot;.\CreateReleaseZip.ps1 '$(GamePath)\Mods\$(TargetName)' '$(ProjectName)_Unofficial-v@(VersionNumber)' '.\releases\'&quot;"
+      WorkingDirectory="$(SolutionDir)"
+    />
+  </Target>
+</Project>
