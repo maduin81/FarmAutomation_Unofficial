@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using FarmAutomation.ItemCollector.Models;
-using StardewModdingAPI;
 using StardewValley.Objects;
 using Object = StardewValley.Object;
 
@@ -11,19 +10,20 @@ namespace FarmAutomation.ItemCollector.Processors
     {
         public List<Object> FindMaterialForMachine(Chest chest, MachineConfig machineConfig)
         {
-            var ret = chest?.items.Where(i => i is Object 
-                && ((Object)i).quality <= machineConfig.MaxQuality
-                && (machineConfig.IsAcceptableObject(i)
-                || machineConfig.IsAcceptableCategory(i))).Cast<Object>().ToList();
-
-            return ret;
+            return chest?.items
+                .OfType<Object>()
+                .Where(i =>
+                    i.quality <= machineConfig.MaxQuality
+                    && (machineConfig.IsAcceptableObject(i) || machineConfig.IsAcceptableCategory(i))
+                )
+                .ToList();
         }
 
         public Object FindCoal(Chest chest, int amountRequired)
         {
-            var ret = chest.items.FirstOrDefault(i => i is Object && i.parentSheetIndex == Object.coal && i.Stack >= amountRequired).Cast<Object>();
-
-            return ret;
+            return chest.items
+                .OfType<Object>()
+                .FirstOrDefault(i => i.parentSheetIndex == Object.coal && i.Stack >= amountRequired);
         }
     }
 }
