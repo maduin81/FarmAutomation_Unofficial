@@ -120,11 +120,6 @@ namespace FarmAutomation.ItemCollector
 
         private static List<AcceptableObject> _GetSeedMakerMaterials()
         {
-            if (Game1.temporaryContent == null)
-            {
-                Game1.temporaryContent = new LocalizedContentManager(Game1.content.ServiceProvider, Game1.content.RootDirectory);
-            }
-
             return (from v in Game1.temporaryContent.Load<Dictionary<int, string>>(@"Data\Crops").Values
                     select v.Split('/') into s
                     select new AcceptableObject(Convert.ToInt32(s[3]))).ToList();

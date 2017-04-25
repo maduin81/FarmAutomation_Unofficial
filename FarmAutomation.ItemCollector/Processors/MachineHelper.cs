@@ -6,6 +6,7 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Objects;
 using Object = StardewValley.Object;
+using SFarmer = StardewValley.Farmer;
 
 namespace FarmAutomation.ItemCollector.Processors
 {
@@ -148,7 +149,7 @@ namespace FarmAutomation.ItemCollector.Processors
             }
         }
 
-        public static Object MoveItemToFarmer(Object itemToMove, Chest sourceChest, Farmer target, int amount)
+        public static Object MoveItemToFarmer(Object itemToMove, Chest sourceChest, SFarmer target, int amount)
         {
             var temporaryItem = (Object)itemToMove.getOne();
             temporaryItem.Stack = amount;
@@ -199,7 +200,7 @@ namespace FarmAutomation.ItemCollector.Processors
             return !(machine is Chest) && machine.minutesUntilReady == 0 && machine.heldObject == null;
         }
 
-        public static bool PutItemInMachine(Object machine, Object refillable, Farmer who)
+        public static bool PutItemInMachine(Object machine, Object refillable, SFarmer who)
         {
             return machine.performObjectDropInAction(refillable, false, who);
         }
