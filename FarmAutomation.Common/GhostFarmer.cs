@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using StardewValley;
+using SFarmer = StardewValley.Farmer;
 
 namespace FarmAutomation.Common
 {
     /// <summary>
     /// helper class for actions where a reference to a farmer is necessary
     /// </summary>
-    public class GhostFarmer : Farmer
+    public class GhostFarmer : SFarmer
     {
         private GhostFarmer() : base(new FarmerSprite(null), Vector2.Zero, 1, "GhostFarmer", new List<Item>(), true)
         {
